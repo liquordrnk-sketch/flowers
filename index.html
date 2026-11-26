@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>bouquet for aisu</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #1e1b24;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+    canvas {
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="bouquetCanvas" width="700" height="750"></canvas>
+
+<script>
+  const canvas = document.getElementById("bouquetCanvas");
+  const ctx = canvas.getContext("2d");
+
+  // Перевод координат Turtle (центр 0,0) в координаты Canvas
+  const toX = (x) => 350 + x;
+  const toY = (y) => 375 - y;
+  const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+  async function drawWrapping() {
+    ctx.strokeStyle = "#ebd5dc";
+    ctx.fillStyle = "#f7e6ec";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(toX(0), toY(-240));
+    ctx.lineTo(toX(-165), toY(35));
+    ctx.lineTo(toX(0), toY(75));
+    ctx.lineTo(toX(165), toY(35));
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    await sleep(60);
+  }
+
+  async function drawStem(startX, startY, endX, endY) {
+    ctx.strokeStyle = "#6b9e78";
+    ctx.lineWidth = 5;
+    ctx.lineCap = "round";
+
+    const steps = 20;
+    let prevX = startX;
+    let prevY = startY;
+
+    for (let i = 1; i <= steps; i++) {
+      const t = i / steps;
+      const curveOffset = Math.sin(t * Math.PI) * (endX - startX) * 0.2;
+      const currX = startX + (endX - startX) * t + curveOffset;
+      const currY = startY + (endY - startY) * t;
+
+      ctx.beginPath();
+      ctx.moveTo(toX(prevX), toY(prevY));
+      ctx.lineTo(toX(currX), toY(currY));
+      ctx.stroke();
+
+      prevX = currX;
+      prevY = currY;
+      await sleep(12);
+    }
+  }
+
+  async function drawLeaf(x, y, angleDeg, size = 35) {
+    ctx.save();
+    ctx.translate(toX(x), toY(y));
+    ctx.rotate((-angleDeg * Math.PI) / 180);
+
+    ctx.strokeStyle = "#5b8c67";
+    ctx.fillStyle = "#84b891";
+    ctx.lineWidth = 2;
+
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.quadraticCurveTo(size * 0.6, -size * 0.5, size * 1.1, 0);
+    ctx.quadraticCurveTo(size * 0.6, size * 0.5, 0, 0);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.restore();
+    await sleep(35);
+  }
+
+  async function drawFlower(x, y, petalColor, centerColor, radius = 28, petals = 6) {
+    const angleStep = (2 * Math.PI) / petals;
+
+    for (let i = 0; i < petals; i++) {
+      const angle = i * angleStep;
+      const px = x + Math.cos(angle) * (radius * 0.55);
+      const py = y + Math.sin(angle) * (radius * 0.55);
+
+      ctx.beginPath();
+      ctx.arc(toX(px), toY(py), radius * 0.55, 0, Math.PI * 2);
+      ctx.fillStyle = petalColor;
+      ctx.fill();
+      ctx.strokeStyle = "#d8c2cc";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      await sleep(30);
+    }
+
+    // Центр цветка
+    ctx.beginPath();
+    ctx.arc(toX(x), toY(y), radius * 0.28, 0, Math.PI * 2);
+    ctx.fillStyle = centerColor;
+    ctx.fill();
+    ctx.strokeStyle = "#e0b85c";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    await sleep(35);
+  }
+
+  async function drawFrontWrapAndRibbon() {
+    ctx.strokeStyle = "#e3c4ce";
+    ctx.fillStyle = "#fceff3";
+    ctx.lineWidth = 3;
+
+    // Левый клапан упаковки
+    ctx.beginPath();
+    ctx.moveTo(toX(0), toY(-240));
+    ctx.lineTo(toX(-155), toY(25));
+    ctx.lineTo(toX(-25), toY(-95));
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    await sleep(50);
+
+    // Правый клапан упаковки
+    ctx.beginPath();
+    ctx.moveTo(toX(0), toY(-240));
+    ctx.lineTo(toX(155), toY(25));
+    ctx.lineTo(toX(25), toY(-95));
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    await sleep(50);
+
+    // Лента
+    ctx.strokeStyle = "#d97391";
+    ctx.fillStyle = "#f08da9";
+    ctx.lineWidth = 2;
+
+    ctx.beginPath();
+    ctx.rect(toX(-32), toY(-135), 64, 14);
+    ctx.fill();
+    ctx.stroke();
+
+    // Левая петля банта
+    ctx.beginPath();
+    ctx.ellipse(toX(-22), toY(-138), 22, 11, -0.35, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Правая петля банта
+    ctx.beginPath();
+    ctx.ellipse(toX(22), toY(-138), 22, 11, 0.35, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    await sleep(60);
+  }
+
+  function writeCaption() {
+    ctx.fillStyle = "#e8d3dc";
+    ctx.font = "bold 24px Arial, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("=)", toX(0), toY(-300));
+  }
+
+  async function startAnimation() {
+    await drawWrapping();
+
+    const flowers = [
+      [-85, 80, "#f7a8be", "#ffe082", 30],
+      [85, 80, "#b5ead7", "#ffe082", 30],
+      [0, 125, "#ffffff", "#ffd54f", 34],
+      [-48, 30, "#c7ceea", "#ffe082", 32],
+      [48, 30, "#ffdac1", "#ffe082", 32],
+      [0, 60, "#f08da9", "#fff176", 35],
+      [-110, 15, "#fff59d", "#ffb74d", 26],
+      [110, 15, "#e2f0cb", "#ffe082", 26],
+      [0, 10, "#e0bbe4", "#fff176", 28]
+    ];
+
+    for (const [fx, fy] of flowers) {
+      await drawStem(0, -210, fx, fy);
+    }
+
+    const leaves = [
+      [-65, -20, 130],
+      [65, -20, 20],
+      [-95, 25, 145],
+      [95, 25, 5],
+      [-35, 10, 120],
+      [35, 10, 30]
+    ];
+
+    for (const [lx, ly, lang] of leaves) {
+      await drawLeaf(lx, ly, lang);
+    }
+
+    for (const [fx, fy, pCol, cCol, rad] of flowers) {
+      await drawFlower(fx, fy, pCol, cCol, rad);
+    }
+
+    await drawFrontWrapAndRibbon();
+    writeCaption();
+  }
+
+  startAnimation();
+</script>
+
+</body>
+</html>
